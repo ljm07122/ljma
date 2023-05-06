@@ -4,30 +4,33 @@
     <meta charset="utf-8">
     <title>全国銀行検索</title>
     <style>
-        td{background-color: #CCFFFF;}
+        html{background-color: rgb(205, 235, 247);}
         th.gincode{width:150px}
         th.sitencode{width:150px}
         th.sitennamekana{width: 500px}
         th.sitenname{width:700px}
+        div.message{background-color: rgb(209, 247, 191);height: 50px; position: relative;} 
+        span.message1{position: absolute; top:25%;color:blue;}
     </style>
 
 </head>
 <body>
-    <div>
-            
-            <input type="file" id="upload-file" style = "width: 200px">
+    <div class = "message" >
+        <span id = "message" class="message1">ロード中．．．</span>
+    </div>
+    </div>
+    <div>           
             銀行選択
             <select id="ddl" style = "width: 250px;">
                 <option value= "null"></option>>
             </select>
-            支店名検索
+            支店検索
             <input type="text" id="search">
             <input type="button" id="searchbtn" value ="検索">
-            <a href="ginkositen.csv" download>全国銀行情報</a>
             <table id="table" border="1" style="border-collapse: collapse; width:1500px;">
             </table>
 
     </div>
-    <script src="銀行検索.js"></script>
+    <script src="銀行検索 - コピー.js"></script>
 </body>
 </html>
