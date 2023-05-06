@@ -8,7 +8,7 @@ var ddl = document.getElementById('ddl');
 let message = document. getElementById('message');
 
 
-windows.onload = function(){
+window.onload = function(){
   var req = new XMLHttpRequest();
   req.open("get","ginkositen.csv",true);
   req.send(null);
