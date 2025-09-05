@@ -15,6 +15,13 @@ var saoin_button =document.getElementById('saoin_copy');
 var basu_button =document.getElementById('basu_copy');
 var beltein_button =document.getElementById('beltein_copy');
 var lunasa_button =document.getElementById('lunasa_copy');
+var pluse_button_first = document.getElementById('pluse_button_first');
+var minus_button_first = document.getElementById('minus_button_first');
+var multiplication_button_first = document.getElementById('multiplication_button_first');
+var pluse_button_second = document.getElementById('pluse_button_second');
+var minus_button_second = document.getElementById('minus_button_second');
+var multiplication_button_second = document.getElementById('multiplication_button_second');
+
 
 circulate.addEventListener('click',function(){
 
@@ -121,6 +128,22 @@ lunasa_button.addEventListener('click',function(){
 
 
 
-
-
+pluse_button_first.addEventListener('click',function(){
+    ddl1.value = "+";
+})
+minus_button_first.addEventListener('click',function(){
+    ddl1.value = "-";
+})
+multiplication_button_first.addEventListener('click',function(){
+    ddl1.value = "*";
+})
+pluse_button_second.addEventListener('click',function(){
+    ddl2.value = "+";
+})
+minus_button_second.addEventListener('click',function(){
+    ddl2.value = "-";
+})
+multiplication_button_second.addEventListener('click',function(){
+    ddl2.value = "*";
+})
 
