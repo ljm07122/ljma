@@ -1,3 +1,5 @@
+
+
 <!Doctype html>
 <html lang="ja">
 <head>
@@ -15,6 +17,12 @@
         .saoin_copy{position:absolute; top:150px; left:200px;}
         .basu_copy{position:absolute; top:200px; left:200px;}
         .beltein_copy{position:absolute; top:250px; left:200px;}
+        .pluse_button_first{position:absolute; top:50px; left:140px; width: 50px; height: 25px;}
+        .minus_button_first{position:absolute; top:50px; left:190px; width: 50px; height: 25px;}
+        .multiplication_button_first{position:absolute; top:50px; left:240px; width: 50px; height: 25px;}
+        .pluse_button_second{position:absolute; top:50px; left:370px; width: 50px; height: 25px;}
+        .minus_button_second{position:absolute; top:50px; left:420px; width: 50px; height: 25px;}
+        .multiplication_button_second{position:absolute; top:50px; left:470px; width: 50px; height: 25px;}
 
     </style>
 
@@ -29,13 +37,19 @@
             <option value= "-" > -</option>
             <option value= "*" > *</option>
             </select>
+            <input type="button" id = "pluse_button_first" class = "pluse_button_first" value ="+">
+            <input type="button" id = "minus_button_first" class = "minus_button_first" value ="-">
+            <input type="button" id = "multiplication_button_first" class = "multiplication_button_first" value ="*">            
             <input type="number" id="number2" placeholder="2番目の数字">
             <select  id="ddl2" style = "width: 50px;">
             <option value=""></option>
             <option value= "+" > +</option>
             <option value= "-" > -</option>
             <option value= "*" > *</option>
-            </datalist>
+            </datalist>value
+            <input type="button" id = "pluse_button_second" class = "pluse_button_second" value ="+">
+            <input type="button" id = "minus_button_second" class = "minus_button_second" value ="-">
+            <input type="button" id = "multiplication_button_second" class = "multiplication_button_second" value ="*"> 
             <input type="number" id="number3" placeholder="3番目の数字">
             <input type="button" id="circulate" value = "計算" style = "width: 50px; height: 25px;">
             <input type="button" id="A/C" value = "初期化" style = "width: 50px; height: 25px;">
