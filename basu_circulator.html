@@ -1,37 +1,93 @@
-
-
 <!Doctype html>
 <html lang="ja">
 <head>
     <meta charset="utf-8">
     <title>クロムバス検索</title>
+    <label >クロムバス検索 made by シルロッツ for ぷるめりあ</label>
     <style>
         html{background-color: rgb(205, 235, 247);}
-        .lunasa{position:absolute; top:300px; left:10px;}
-        .imbolic{position:absolute; top:100px; left:10px;}
-        .saoin{position:absolute; top:150px; left:10px;}
-        .basu{position:absolute; top:200px; left:10px;}
-        .beltein{position:absolute; top:250px; left:10px;}
-        .lunasa_copy{position:absolute; top:300px; left:200px;}
-        .imbolic_copy{position:absolute; top:100px; left:200px;}
-        .saoin_copy{position:absolute; top:150px; left:200px;}
-        .basu_copy{position:absolute; top:200px; left:200px;}
-        .beltein_copy{position:absolute; top:250px; left:200px;}
-        .pluse_button_first{position:absolute; top:50px; left:140px; width: 50px; height: 25px;}
-        .minus_button_first{position:absolute; top:50px; left:190px; width: 50px; height: 25px;}
-        .multiplication_button_first{position:absolute; top:50px; left:240px; width: 50px; height: 25px;}
-        .pluse_button_second{position:absolute; top:50px; left:370px; width: 50px; height: 25px;}
-        .minus_button_second{position:absolute; top:50px; left:420px; width: 50px; height: 25px;}
-        .multiplication_button_second{position:absolute; top:50px; left:470px; width: 50px; height: 25px;}
+        .number1{position:absolute; top:30px; left:0px;}
+        .number2{position:absolute; top:30px; left:250px;}
+        .number3{position:absolute; top:30px; left:500px;}
 
+        .ddl1{position:absolute; top:30px; left:180px;}
+        .ddl2{position:absolute; top:30px; left:430px;}
+
+        .table1{position:absolute; top:50px; left:50px;}
+        .table2{position:absolute; top:50px; left:300px;}
+        .table3{position:absolute; top:50px; left:550px;}
+
+        .lunasa{position:absolute; top:200px; left:10px;}
+        .imbolic{position:absolute; top:250px; left:10px;}
+        .saoin{position:absolute; top:300px; left:10px;}
+        .basu{position:absolute; top:350px; left:10px;}
+        .beltein{position:absolute; top:400px; left:10px;}
+
+
+
+ 
+        .imbolic_copy{position:absolute; top:200px; left:200px;}
+        .saoin_copy{position:absolute; top:250px; left:200px;}
+        .basu_copy{position:absolute; top:300px; left:200px;}
+        .beltein_copy{position:absolute; top:350px; left:200px;}
+       .lunasa_copy{position:absolute; top:400px; left:200px;}
+
+
+        .pluse_button_first{position:absolute; top:50px; left:170px; width: 25px; height: 25px;}
+        .minus_button_first{position:absolute; top:50px; left:195px; width: 25px; height: 25px;}
+        .multiplication_button_first{position:absolute; top:50px; left:220px; width: 25px; height: 25px;}
+        .pluse_button_second{position:absolute; top:50px; left:420px; width: 25px; height: 25px;}
+        .minus_button_second{position:absolute; top:50px; left:445px; width: 25px; height: 25px;}
+        .multiplication_button_second{position:absolute; top:50px; left:470px; width: 25px; height: 25px;}
+
+
+        .circulate{position:absolute; top:30px; left:680px;}
+        .Allclear{position:absolute; top:30px; left:730px;}
     </style>
 
 </head>
 <body>
     <div>           
 
-            <input type="number" id="number1" placeholder="最初の数字">
-            <select  id="ddl1" style = "width: 50px;">
+            <input class= "number1" type="number" id="number1" placeholder="最初の数字">
+            <table class="table1" id="table1" border= "1" style="border-collapse: collapse;">
+            <tr>
+
+                <td  ><input type = "button" id="table_1_1" value ="1"></td>
+                <td  ><input type = "button" id="table_1_2" value ="2"></td>
+                <td  ><input type = "button" id="table_1_3" value ="3"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_1_4" value ="4"></td>
+                <td ><input type = "button" id="table_1_5" value ="5"></td>
+                <td ><input type = "button" id="table_1_6" value ="6"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_1_7" value ="7"></td>
+                <td ><input type = "button" id="table_1_8" value ="8"></td>
+                <td ><input type = "button" id="table_1_9" value ="9"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ></td>
+                <td ><input type = "button" id="table_1_0" value ="0"></td>
+                <td ><input type = "button" id="clear1" value="c"></td>
+
+
+            </tr>
+            </table>
+
+
+
+            <select  class= "ddl1"id="ddl1" style = "width: 50px;">
             <option value=""></option>
             <option value= "+" > +</option>
             <option value= "-" > -</option>
@@ -39,9 +95,45 @@
             </select>
             <input type="button" id = "pluse_button_first" class = "pluse_button_first" value ="+">
             <input type="button" id = "minus_button_first" class = "minus_button_first" value ="-">
-            <input type="button" id = "multiplication_button_first" class = "multiplication_button_first" value ="*">            
-            <input type="number" id="number2" placeholder="2番目の数字">
-            <select  id="ddl2" style = "width: 50px;">
+            <input type="button" id = "multiplication_button_first" class = "multiplication_button_first" value ="*">    
+
+            <input class= "number2" type="number" id="number2" placeholder="2番目の数字">
+
+            <table class="table2" id="table2" border= "1" style="border-collapse: collapse;">
+            <tr>
+
+                <td  ><input type = "button" id="table_2_1" value ="1"></td>
+                <td  ><input type = "button" id="table_2_2" value ="2"></td>
+                <td  ><input type = "button" id="table_2_3" value ="3"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_2_4" value ="4"></td>
+                <td ><input type = "button" id="table_2_5" value ="5"></td>
+                <td ><input type = "button" id="table_2_6" value ="6"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_2_7" value ="7"></td>
+                <td ><input type = "button" id="table_2_8" value ="8"></td>
+                <td ><input type = "button" id="table_2_9" value ="9"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ></td>
+                <td ><input type = "button" id="table_2_0" value ="0"></td>
+                <td ><input type = "button" id="clear2" value="c"></td>
+
+
+            </tr>
+            </table>
+            <select  class= "ddl2"id="ddl2" style = "width: 50px;">
             <option value=""></option>
             <option value= "+" > +</option>
             <option value= "-" > -</option>
@@ -50,9 +142,43 @@
             <input type="button" id = "pluse_button_second" class = "pluse_button_second" value ="+">
             <input type="button" id = "minus_button_second" class = "minus_button_second" value ="-">
             <input type="button" id = "multiplication_button_second" class = "multiplication_button_second" value ="*"> 
-            <input type="number" id="number3" placeholder="3番目の数字">
-            <input type="button" id="circulate" value = "計算" style = "width: 50px; height: 25px;">
-            <input type="button" id="A/C" value = "初期化" style = "width: 50px; height: 25px;">
+            <input class= "number3" type="number" id="number3" placeholder="3番目の数字">
+            <table class="table3" id="table3" border= "1" style="border-collapse: collapse;">
+            <tr>
+
+                <td  ><input type = "button" id="table_3_1" value ="1"></td>
+                <td  ><input type = "button" id="table_3_2" value ="2"></td>
+                <td  ><input type = "button" id="table_3_3" value ="3"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_3_4" value ="4"></td>
+                <td ><input type = "button" id="table_3_5" value ="5"></td>
+                <td ><input type = "button" id="table_3_6" value ="6"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ><input type = "button" id="table_3_7" value ="7"></td>
+                <td ><input type = "button" id="table_3_8" value ="8"></td>
+                <td ><input type = "button" id="table_3_9" value ="9"></td>
+
+
+            </tr>
+            <tr>
+
+                <td ></td>
+                <td ><input type = "button" id="table_3_0" value ="0"></td>
+                <td ><input type = "button" id="clear3" value="c"></td>
+
+
+            </tr>
+            </table>
+            <input type="button" class = "circulate" id="circulate" value = "計算" style = "width: 50px; height: 25px;">
+            <input type="button" class = "Allclear" id="Allclear" value = "初期化" style = "width: 50px; height: 25px;">
 
             <span id = "textArea">
             <input type="text"  id="imbolic" class="imbolic" readonly>
