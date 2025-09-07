@@ -74,9 +74,11 @@ var number3_clear = document.getElementById('clear3');
 
 
 
-circulate.addEventListener('click',function(){
 
-    if(ddl1.value == "+"){
+
+var circulate_auto = function(){
+        if(number1 != "" && number2 != "" && number3 != ""){
+        if(ddl1.value == "+"){
 
         if(ddl2.value == "+"){
             imbolic_a.value = (Number(number1.value) + Number(number2.value) + Number(number3.value)) + "インボリック";
@@ -100,6 +102,7 @@ circulate.addEventListener('click',function(){
             lunasa_a.value = ((Number(number1.value) + Number(number2.value)) * Number(number3.value)) + "ルーナサ";
         }
     }else if (ddl1.value == "-"){
+
         if(ddl2.value == "+"){
             imbolic_a.value = (Number(number1.value) - Number(number2.value) + Number(number3.value)) + "インボリック";
             saoin_a.value = (Number(number1.value) - Number(number2.value) + Number(number3.value)) + "サーオィン";            
@@ -122,6 +125,7 @@ circulate.addEventListener('click',function(){
             lunasa_a.value = ((Number(number1.value) - Number(number2.value)) * Number(number3.value)) + "ルーナサ";
         }
     }else if (ddl1.value == "*"){
+
         if(ddl2.value == "+"){
             imbolic_a.value = (Number(number1.value) * Number(number2.value) + Number(number3.value)) + "インボリック";
             saoin_a.value = (Number(number1.value) * Number(number2.value) + Number(number3.value)) + "サーオィン";            
@@ -145,7 +149,21 @@ circulate.addEventListener('click',function(){
         }
     }
 
-})
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 clear.addEventListener('click',function(){
     number1.value = "";
     number2.value = "";
@@ -181,121 +199,160 @@ lunasa_button.addEventListener('click',function(){
 
 pluse_button_first.addEventListener('click',function(){
     ddl1.value = "+";
+    circulate_auto();
 })
 minus_button_first.addEventListener('click',function(){
     ddl1.value = "-";
+    circulate_auto();
 })
 multiplication_button_first.addEventListener('click',function(){
     ddl1.value = "*";
+    circulate_auto();
 })
 pluse_button_second.addEventListener('click',function(){
     ddl2.value = "+";
+    circulate_auto();
 })
 minus_button_second.addEventListener('click',function(){
     ddl2.value = "-";
+    circulate_auto();
 })
 multiplication_button_second.addEventListener('click',function(){
     ddl2.value = "*";
+    circulate_auto();
 })
 
 table1_1.addEventListener('click',function(){
-    number1.value = number1.value + table1_1.value
+    number1.value = number1.value + table1_1.value;
+    circulate_auto();
 })
 table1_2.addEventListener('click',function(){
     number1.value = number1.value + table1_2.value
+    circulate_auto();
 })
 table1_3.addEventListener('click',function(){
     number1.value = number1.value + table1_3.value
+    circulate_auto();
 })
 table1_4.addEventListener('click',function(){
     number1.value = number1.value + table1_4.value
+    circulate_auto();
 })
 table1_5.addEventListener('click',function(){
     number1.value = number1.value + table1_5.value
+    circulate_auto();
 })
 table1_6.addEventListener('click',function(){
     number1.value = number1.value + table1_6.value
+    circulate_auto();
 })
 table1_7.addEventListener('click',function(){
     number1.value = number1.value + table1_7.value
+    circulate_auto();
 })
 table1_8.addEventListener('click',function(){
     number1.value = number1.value + table1_8.value
+    circulate_auto();
 })
 table1_9.addEventListener('click',function(){
     number1.value = number1.value + table1_9.value
+    circulate_auto();
 })
 table1_0.addEventListener('click',function(){
     number1.value = number1.value + table1_0.value
+    circulate_auto();
 })
 table2_1.addEventListener('click',function(){
     number2.value = number2.value + table2_1.value
+    circulate_auto();
 })
 table2_2.addEventListener('click',function(){
     number2.value = number2.value + table2_2.value
+    circulate_auto();
 })
 table2_3.addEventListener('click',function(){
     number2.value = number2.value + table2_3.value
+    circulate_auto();
 })
 table2_4.addEventListener('click',function(){
     number2.value = number2.value + table2_4.value
+    circulate_auto();
 })
 table2_5.addEventListener('click',function(){
     number2.value = number2.value + table2_5.value
+    circulate_auto();
 })
 table2_6.addEventListener('click',function(){
     number2.value = number2.value + table2_6.value
+    circulate_auto();
 })
 table2_7.addEventListener('click',function(){
     number2.value = number2.value + table2_7.value
+    circulate_auto();
 })
 table2_8.addEventListener('click',function(){
     number2.value = number2.value + table2_8.value
+    circulate_auto();
 })
 table2_9.addEventListener('click',function(){
     number2.value = number2.value + table2_9.value
+    circulate_auto();
 })
 table2_0.addEventListener('click',function(){
     number2.value = number2.value + table2_0.value
+    circulate_auto();
 })
 table3_1.addEventListener('click',function(){
     number3.value = number3.value + table3_1.value
+    circulate_auto();
 })
 table3_2.addEventListener('click',function(){
     number3.value = number3.value + table3_2.value
+    circulate_auto();
 })
 table3_3.addEventListener('click',function(){
     number3.value = number3.value + table3_3.value
+    circulate_auto();
 })
 table3_4.addEventListener('click',function(){
     number3.value = number3.value + table3_4.value
+    circulate_auto();
 })
 table3_5.addEventListener('click',function(){
     number3.value = number3.value + table3_5.value
+    circulate_auto();
 })
 table3_6.addEventListener('click',function(){
     number3.value = number3.value + table3_6.value
+    circulate_auto();
 })
 table3_7.addEventListener('click',function(){
     number3.value = number3.value + table3_7.value
+    circulate_auto();
 })
 table3_8.addEventListener('click',function(){
     number3.value = number3.value + table3_8.value
+    circulate_auto();
 })
 table3_9.addEventListener('click',function(){
     number3.value = number3.value + table3_9.value
+    circulate_auto();
 })
 table3_0.addEventListener('click',function(){
     number3.value = number3.value + table3_0.value
+    circulate_auto();
 })
 number1_clear.addEventListener('click',function(){
     number1.value = ""
+    circulate_auto();
 })
 number2_clear.addEventListener('click',function(){
     number2.value = ""
+    circulate_auto();
 })
 number3_clear.addEventListener('click',function(){
     number3.value = ""
+    circulate_auto();
 })
 
 
