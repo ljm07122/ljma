@@ -164,16 +164,16 @@ imbolic_button.addEventListener('click',function(){
     navigator.clipboard.writeText(imbolic_a.value);
 })
 saoin_button.addEventListener('click',function(){
-    navigator.clipboard.writeText(imbolic_a.value);
+    navigator.clipboard.writeText(saoin_a.value);
 })
 basu_button.addEventListener('click',function(){
-    navigator.clipboard.writeText(imbolic_a.value);
+    navigator.clipboard.writeText(basu_a.value);
 })
 beltein_button.addEventListener('click',function(){
-    navigator.clipboard.writeText(imbolic_a.value);
+    navigator.clipboard.writeText(beltein_a.value);
 })
 lunasa_button.addEventListener('click',function(){
-    navigator.clipboard.writeText(imbolic_a.value);
+    navigator.clipboard.writeText(lunasa_a.value);
 })
 
 
@@ -297,3 +297,6 @@ number2_clear.addEventListener('click',function(){
 number3_clear.addEventListener('click',function(){
     number3.value = ""
 })
+
+
+
