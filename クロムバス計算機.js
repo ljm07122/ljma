@@ -165,6 +165,8 @@ var circulate_auto = function(){
 
 
 clear.addEventListener('click',function(){
+    ddl2.value="";
+    ddl1.value="";
     number1.value = "";
     number2.value = "";
     number3.value = "";
