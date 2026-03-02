@@ -186,7 +186,7 @@ function downloadSelected() {
         .map(row => {
             const cleanRow = { ...row };
             delete cleanRow._selected;
-            cleanRow["保有数"] = cleanRow._number;
+            cleanRow["보유수"] = cleanRow._number;
             delete cleanRow._number;
             return cleanRow;
         });
@@ -211,4 +211,5 @@ function downloadSelected() {
 </script>
 
 </body>
+
 </html>
