@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CSV Selector</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+table { border-collapse: collapse; }
+th, td { border: 1px solid #ccc; padding: 4px; }
+</style>
+</head>
+<body>
+
+<input type="file" id="fileInput" accept=".csv">
+<br><br>
+
+검색: <input type="text" id="searchInput">
+<button onclick="applySearch()">검색</button>
+
+<br><br>
+
+<div>
+<button onclick="prevPage()">이전</button>
+<span id="pageInfo"></span>
+<button onclick="nextPage()">다음</button>
+</div>
+
+<br>
+
+<table id="dataTable"></table>
+
+<br>
+<button onclick="downloadSelected()">체크된 데이터 다운로드</button>
+
+<script>
+
+let originalData = [];
+let filteredData = [];
+
+let currentPage = 1;
+const pageSize = 100;
+
+document.getElementById("fileInput").addEventListener("change", function(e) {
+
+    Papa.parse(e.target.files[0], {
+        header: true,
+        skipEmptyLines: true,
+        worker: true,
+        complete: function(results) {
+
+            // 선택 상태 + 숫자 필드 추가
+            originalData = results.data.map(row => ({
+                ...row,
+                _selected: false,
+                _number: ""
+            }));
+
+            filteredData = [...originalData];
+            currentPage = 1;
+            renderPage();
+        }
+    });
+});
+
+function applySearch() {
+
+    const keyword = document.getElementById("searchInput").value.toLowerCase();
+
+    filteredData = originalData.filter(row =>
+        Object.entries(row)
+            .filter(([key]) => !key.startsWith("_"))
+            .some(([_, val]) =>
+                String(val).toLowerCase().includes(keyword)
+            )
+    );
+
+    currentPage = 1;
+    renderPage();
+}
+
+function renderPage() {
+
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+
+    const pageData = filteredData.slice(start, end);
+
+    renderTable(pageData);
+
+    const totalPages = Math.ceil(filteredData.length / pageSize);
+    document.getElementById("pageInfo").innerText =
+        `Page ${currentPage} / ${totalPages}`;
+}
+
+function renderTable(data) {
+
+    const table = document.getElementById("dataTable");
+    table.innerHTML = "";
+
+    if (data.length === 0) return;
+
+    const headers = Object.keys(data[0]).filter(h => !h.startsWith("_"));
+
+    const fragment = document.createDocumentFragment();
+
+    // 헤더
+    const headerTr = document.createElement("tr");
+
+    headerTr.innerHTML = "<th>선택</th>";
+
+    headers.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        headerTr.appendChild(th);
+    });
+
+    const numberTh = document.createElement("th");
+    numberTh.textContent = "숫자 입력";
+    headerTr.appendChild(numberTh);
+
+    fragment.appendChild(headerTr);
+
+    // 데이터 행
+    data.forEach(row => {
+
+        const tr = document.createElement("tr");
+
+        // 체크박스
+        const tdCheck = document.createElement("td");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = row._selected;
+
+        checkbox.addEventListener("change", function() {
+            row._selected = this.checked;
+        });
+
+        tdCheck.appendChild(checkbox);
+        tr.appendChild(tdCheck);
+
+        // 데이터 셀
+        headers.forEach(h => {
+            const td = document.createElement("td");
+            td.textContent = row[h];
+            tr.appendChild(td);
+        });
+
+        // 숫자 입력
+        const tdNumber = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = row._number;
+
+        input.addEventListener("input", function() {
+            row._number = this.value;
+        });
+
+        tdNumber.appendChild(input);
+        tr.appendChild(tdNumber);
+
+        fragment.appendChild(tr);
+    });
+
+    table.appendChild(fragment);
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(filteredData.length / pageSize);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+    }
+}
+
+function downloadSelected() {
+
+    const selectedRows = originalData
+        .filter(row => row._selected)
+        .map(row => {
+            const cleanRow = { ...row };
+            delete cleanRow._selected;
+            cleanRow["保有数"] = cleanRow._number;
+            delete cleanRow._number;
+            return cleanRow;
+        });
+
+    if (selectedRows.length === 0) {
+        alert("선택된 데이터가 없습니다.");
+        return;
+    }
+
+    const csv = Papa.unparse(selectedRows);
+
+    const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "selected_data.csv";
+    link.click();
+}
+
+</script>
+
+</body>
+</html>
