@@ -6,319 +6,109 @@
 <title>CSV Row Mover</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0f0f0f;
-    --surface: #171717;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --border2: #333;
-    --accent: #c8f135;
-    --accent-dim: #a8cc2a;
+    --bg: #0f0f0f; --surface: #171717; --surface2: #1e1e1e;
+    --border: #2a2a2a; --border2: #333;
+    --accent: #c8f135; --accent-dim: #a8cc2a;
     --blue: #6ab3f5;
-    --blue-bg: rgba(106,179,245,0.08);
-    --text: #e8e8e8;
-    --text-muted: #777;
-    --text-dim: #aaa;
-    --sel-bg-a: #1e2a0a;
-    --sel-bg-b: #0a1a2e;
-    --danger: #ff4d4d;
-    --warn: #f5a623;
+    --text: #e8e8e8; --text-muted: #777; --text-dim: #aaa;
+    --sel-bg-a: #1e2a0a; --sel-bg-b: #0a1a2e;
+    --danger: #ff4d4d; --warn: #f5a623;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans KR', sans-serif;
   }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    min-height: 100vh;
-    padding: 32px 24px;
-  }
-
-  header {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 16px;
-  }
-
-  header h1 {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--accent);
-    letter-spacing: -0.02em;
-  }
-
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; padding: 32px 24px; }
+  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+  header h1 { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--accent); letter-spacing: -0.02em; }
   header p { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
-
-  .layout {
-    display: grid;
-    grid-template-columns: 1fr 108px 1fr;
-    align-items: start;
-  }
-
+  .layout { display: grid; grid-template-columns: 1fr 108px 1fr; align-items: start; }
   .panel { border: 1px solid var(--border); background: var(--surface); overflow: hidden; }
   .panel-left  { border-radius: 8px 0 0 8px; }
   .panel-right { border-radius: 0 8px 8px 0; border-left: none; }
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
+  .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .panel-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
   .panel-left .panel-label  { color: var(--accent); }
   .panel-right .panel-label { color: var(--blue); }
+  .count-badge { font-family: var(--mono); font-size: 11px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; }
 
-  .count-badge {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 8px;
-  }
+  /* search bar */
+  .search-bar { display: none; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .search-bar.active { display: flex; }
+  .search-bar svg { flex-shrink: 0; opacity: 0.35; }
+  .search-input { flex: 1; font-family: var(--mono); font-size: 12px; background: transparent; border: none; outline: none; color: var(--text); padding: 2px 0; }
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-count { font-family: var(--mono); font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+  .search-clear { font-family: var(--mono); font-size: 16px; line-height: 1; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0 2px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .search-clear.on { opacity: 1; pointer-events: auto; }
+  .search-clear:hover { color: var(--text); }
+  mark   { background: rgba(200,241,53,0.28); color: var(--accent); border-radius: 2px; padding: 0 1px; font-style: normal; }
+  mark.bm { background: rgba(106,179,245,0.22); color: var(--blue); }
 
-  .upload-zone {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 40px 20px;
-    cursor: pointer;
-    border: 1.5px dashed var(--border2);
-    border-radius: 4px;
-    margin: 16px;
-    transition: border-color 0.15s, background 0.15s;
-    min-height: 140px;
-  }
-
-  .upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--accent);
-    background: rgba(200,241,53,0.04);
-  }
-
+  .upload-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 40px 20px; cursor: pointer; border: 1.5px dashed var(--border2); border-radius: 4px; margin: 16px; transition: border-color 0.15s, background 0.15s; min-height: 140px; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(200,241,53,0.04); }
   .upload-zone input { display: none; }
   .upload-icon { width: 32px; height: 32px; opacity: 0.4; }
-
-  .upload-text {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.6;
-  }
-
+  .upload-text { font-family: var(--mono); font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6; }
   .upload-text span { color: var(--accent); border-bottom: 1px solid currentColor; }
-
   .table-wrap { max-height: 340px; overflow-y: auto; overflow-x: auto; }
   .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
   .table-wrap::-webkit-scrollbar-track { background: var(--surface); }
   .table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
   table { width: 100%; border-collapse: collapse; table-layout: auto; }
-
-  thead th {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-
+  thead th { font-family: var(--mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
   thead th.chk-col { width: 36px; text-align: center; }
-  thead th.qty-col { width: 90px; text-align: center; color: var(--accent); }
+  thead th.qty-col   { width: 90px; text-align: center; color: var(--accent); }
   thead th.qty-col-b { width: 90px; text-align: center; color: var(--blue); }
-
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover td { background: var(--surface2); cursor: pointer; }
-
-  /* A selected */
   tbody.tbody-a tr.selected td { background: var(--sel-bg-a); }
   tbody.tbody-a tr.selected td:first-child { border-left: 2px solid var(--accent); }
-
-  /* B selected */
   tbody.tbody-b tr.selected td { background: var(--sel-bg-b); }
   tbody.tbody-b tr.selected td:first-child { border-left: 2px solid var(--blue); }
-
-  td {
-    font-size: 12px;
-    font-family: var(--mono);
-    color: var(--text-dim);
-    padding: 7px 10px;
-    white-space: nowrap;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
+  td { font-size: 12px; font-family: var(--mono); color: var(--text-dim); padding: 7px 10px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
   td.chk-col { text-align: center; }
   td.qty-col { text-align: center; padding: 4px 6px; vertical-align: middle; }
-
-  .qty-input {
-    width: 62px;
-    font-family: var(--mono);
-    font-size: 12px;
-    text-align: center;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    color: var(--accent);
-    padding: 4px;
-    outline: none;
-    transition: border-color 0.15s;
-    display: block;
-    margin: 0 auto 2px;
-  }
-
-  .qty-input.blue     { color: var(--blue); }
-  .qty-input:focus    { border-color: var(--accent); }
+  .qty-input { width: 62px; font-family: var(--mono); font-size: 12px; text-align: center; background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; color: var(--accent); padding: 4px; outline: none; transition: border-color 0.15s; display: block; margin: 0 auto 2px; }
+  .qty-input.blue { color: var(--blue); }
+  .qty-input:focus { border-color: var(--accent); }
   .qty-input.blue:focus { border-color: var(--blue); }
   .qty-input:disabled { opacity: 0.25; cursor: not-allowed; }
-  .qty-input.warn     { border-color: var(--warn);   color: var(--warn); }
-  .qty-input.error    { border-color: var(--danger);  color: var(--danger); }
-
-  .qty-hint {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.3;
-    min-height: 13px;
-  }
-
+  .qty-input.warn  { border-color: var(--warn);   color: var(--warn); }
+  .qty-input.error { border-color: var(--danger);  color: var(--danger); }
+  .qty-hint { font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.3; min-height: 13px; }
   .qty-hint.warn  { color: var(--warn); }
   .qty-hint.error { color: var(--danger); }
   .qty-hint.ok    { color: var(--accent); }
   .qty-hint.ok-b  { color: var(--blue); }
-
   input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
   input[type="checkbox"].blue { accent-color: var(--blue); }
-
-  .panel-footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-top: 1px solid var(--border);
-    background: var(--surface2);
-    flex-wrap: wrap;
-  }
-
+  .panel-footer { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface2); flex-wrap: wrap; }
   .footer-info { font-family: var(--mono); font-size: 11px; color: var(--text-muted); flex: 1; min-width: 80px; }
   .footer-info strong { font-weight: 500; }
   .footer-info strong.green { color: var(--accent); }
   .footer-info strong.blue  { color: var(--blue); }
-
-  button {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
+  button { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border2); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   button:hover  { border-color: var(--text-dim); color: var(--text); background: var(--surface2); }
   button:active { transform: scale(0.97); }
   button:disabled { opacity: 0.3; cursor: default; transform: none; }
-
-  button.primary-a {
-    background: var(--accent); color: #0f0f0f;
-    border-color: var(--accent); font-weight: 500;
-  }
+  button.primary-a { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 500; }
   button.primary-a:hover    { background: var(--accent-dim); border-color: var(--accent-dim); }
   button.primary-a:disabled { background: var(--border2); border-color: var(--border2); color: var(--text-muted); }
-
-  button.primary-b {
-    background: var(--blue); color: #0f0f0f;
-    border-color: var(--blue); font-weight: 500;
-  }
+  button.primary-b { background: var(--blue); color: #0f0f0f; border-color: var(--blue); font-weight: 500; }
   button.primary-b:hover    { background: #4e9de0; border-color: #4e9de0; }
   button.primary-b:disabled { background: var(--border2); border-color: var(--border2); color: var(--text-muted); }
-
   button.danger { color: var(--danger); border-color: rgba(255,77,77,0.3); }
   button.danger:hover { background: rgba(255,77,77,0.08); border-color: var(--danger); }
-
-  .mid-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 16px 4px;
-    min-height: 200px;
-  }
-
-  .mid-divider {
-    width: 1px; height: 20px;
-    background: var(--border);
-  }
-
-  .empty-state {
-    padding: 40px 20px;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.8;
-  }
-
+  .mid-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px 4px; min-height: 200px; }
+  .mid-divider { width: 1px; height: 20px; background: var(--border); }
+  .empty-state { padding: 40px 20px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-muted); line-height: 1.8; }
   tbody tr.new-row-b td { color: #8dc8ff; }
   tbody tr.new-row-b td:first-child { border-left: 2px solid var(--blue); }
   tbody tr.new-row-a td { color: #d4f07a; }
   tbody tr.new-row-a td:first-child { border-left: 2px solid var(--accent); }
-
-  .status-bar {
-    margin-top: 16px;
-    padding: 8px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 34px;
-  }
-
+  .status-bar { margin-top: 16px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; min-height: 34px; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
   .status-dot.ok   { background: var(--accent); }
   .status-dot.info { background: var(--blue); }
@@ -334,11 +124,22 @@
 
 <div class="layout">
 
-  <!-- ── Panel A ── -->
+  <!-- Panel A -->
   <div class="panel panel-left">
     <div class="panel-header">
       <span class="panel-label">파일 A — 출처</span>
       <span class="count-badge" id="badgeA">0 rows</span>
+    </div>
+
+    <!-- Search A -->
+    <div class="search-bar" id="searchBarA">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="4.5" stroke="#aaa" stroke-width="1.4"/>
+        <path d="M10 10l3.5 3.5" stroke="#aaa" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <input class="search-input" id="searchInputA" placeholder="검색..." oninput="onSearchA(this)">
+      <span class="search-count" id="searchCountA"></span>
+      <button class="search-clear" id="searchClearA" onclick="clearSearchA()">&#x2715;</button>
     </div>
 
     <div class="upload-zone" id="zoneA">
@@ -363,18 +164,29 @@
     </div>
   </div>
 
-  <!-- ── Middle ── -->
+  <!-- Middle -->
   <div class="mid-col">
-    <button class="primary-a" id="btnMoveAtoB" onclick="moveAtoB()" disabled title="A → B 이동">A→B</button>
+    <button class="primary-a" id="btnMoveAtoB" onclick="moveAtoB()" disabled>A→B</button>
     <div class="mid-divider"></div>
-    <button class="primary-b" id="btnMoveBtoA" onclick="moveBtoA()" disabled title="B → A 이동">B→A</button>
+    <button class="primary-b" id="btnMoveBtoA" onclick="moveBtoA()" disabled>B→A</button>
   </div>
 
-  <!-- ── Panel B ── -->
+  <!-- Panel B -->
   <div class="panel panel-right">
     <div class="panel-header">
       <span class="panel-label" style="color:var(--blue)">파일 B — 대상</span>
       <span class="count-badge" id="badgeB">0 rows</span>
+    </div>
+
+    <!-- Search B -->
+    <div class="search-bar" id="searchBarB">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="4.5" stroke="#6ab3f5" stroke-width="1.4"/>
+        <path d="M10 10l3.5 3.5" stroke="#6ab3f5" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <input class="search-input" id="searchInputB" placeholder="검색..." oninput="onSearchB(this)">
+      <span class="search-count" id="searchCountB"></span>
+      <button class="search-clear" id="searchClearB" onclick="clearSearchB()">&#x2715;</button>
     </div>
 
     <div class="upload-zone" id="zoneB">
@@ -426,6 +238,7 @@ let newInA = new Set(), newInB = new Set();
 let qtyColA = -1, qtyColB = -1;
 let filenameA = 'file_a.csv', filenameB = 'file_b.csv';
 let movedAtoB = 0, movedBtoA = 0;
+let searchA = '', searchB = '';
 
 /* ── CSV ── */
 function parseCSV(text) {
@@ -461,7 +274,23 @@ function findQtyCol(headers) {
   return headers.findIndex(h => h.trim() === '보유수');
 }
 
-/* ── qty validation (generic) ── */
+/* ── search highlight ── */
+function highlight(text, query, markClass) {
+  if (!query) return escH(text);
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(${escaped})`, 'gi');
+  return escH(text).replace(re, `<mark class="${markClass}">$1</mark>`);
+}
+
+/* ── filter rows by search ── */
+function filterRows(data, query) {
+  if (!query) return data.map((row, i) => ({ row, i }));
+  const q = query.toLowerCase();
+  return data.map((row, i) => ({ row, i }))
+    .filter(({ row }) => row.some(c => String(c).toLowerCase().includes(q)));
+}
+
+/* ── qty validation ── */
 function validateQty(data, idx, qtyColIdx, qtyMap, colorOk) {
   if (qtyColIdx < 0) return { cls: '', hint: '', ok: true };
   const stock = parseInt(data[idx][qtyColIdx]) || 0;
@@ -476,6 +305,7 @@ function validateQty(data, idx, qtyColIdx, qtyMap, colorOk) {
 function renderTableA() {
   const thead = document.getElementById('theadA');
   const tbody = document.getElementById('tbodyA');
+  const filtered = filterRows(dataA, searchA);
 
   let th = '<tr><th class="chk-col"><input type="checkbox" id="chkAllA" onchange="toggleAllA(this)"></th>';
   headersA.forEach(h => th += `<th>${escH(h)}</th>`);
@@ -483,20 +313,22 @@ function renderTableA() {
   th += '</tr>';
   thead.innerHTML = th;
 
-  tbody.innerHTML = dataA.map((row, i) => {
-    const sel = selA.has(i);
-    const isNew = newInA.has(i);
-    const v = validateQty(dataA, i, qtyColA, qtyMapA, 'ok');
+  tbody.innerHTML = filtered.map(({ row, i }) => {
+    const sel    = selA.has(i);
+    const isNew  = newInA.has(i);
+    const v      = validateQty(dataA, i, qtyColA, qtyMapA, 'ok');
+    const stock  = qtyColA >= 0 ? parseInt(row[qtyColA]) || 0 : 0;
+    const qtyVal = qtyMapA[i] !== undefined ? qtyMapA[i] : String(stock);
 
     let tds = `<td class="chk-col" onclick="toggleRowA(${i})">
       <input type="checkbox" ${sel?'checked':''} onchange="toggleRowA(${i})" onclick="event.stopPropagation()">
     </td>`;
-    headersA.forEach((_,j) => tds += `<td title="${escH(row[j]||'')}">${escH(row[j]||'')}</td>`);
-
+    headersA.forEach((_,j) => {
+      const cell = String(row[j] || '');
+      tds += `<td title="${escH(cell)}">${highlight(cell, searchA, '')}</td>`;
+    });
     if (qtyColA >= 0) {
-      const stock  = parseInt(row[qtyColA]) || 0;
-      const qtyVal = qtyMapA[i] !== undefined ? qtyMapA[i] : String(stock);
-      const cls = sel ? v.cls : '';
+      const cls  = sel ? v.cls : '';
       const hint = sel ? v.hint : '';
       tds += `<td class="qty-col">
         <input class="qty-input ${cls}" type="number" min="1" max="${stock}"
@@ -505,10 +337,16 @@ function renderTableA() {
         <div class="qty-hint ${cls}">${hint}</div>
       </td>`;
     }
-
     const rowCls = isNew ? 'new-row-a' : (sel ? 'selected' : '');
     return `<tr class="${rowCls}" onclick="toggleRowA(${i})">${tds}</tr>`;
   }).join('');
+
+  // search count
+  if (searchA) {
+    document.getElementById('searchCountA').textContent = `${filtered.length}/${dataA.length}`;
+  } else {
+    document.getElementById('searchCountA').textContent = '';
+  }
 
   document.getElementById('badgeA').textContent = dataA.length + ' rows';
   updateFooterA();
@@ -528,6 +366,7 @@ function onQtyChangeA(i, input) {
 function renderTableB() {
   const thead = document.getElementById('theadB');
   const tbody = document.getElementById('tbodyB');
+  const filtered = filterRows(dataB, searchB);
 
   let th = '<tr><th class="chk-col"><input type="checkbox" id="chkAllB" onchange="toggleAllB(this)"></th>';
   headersB.forEach(h => th += `<th>${escH(h)}</th>`);
@@ -535,20 +374,22 @@ function renderTableB() {
   th += '</tr>';
   thead.innerHTML = th;
 
-  tbody.innerHTML = dataB.map((row, i) => {
-    const sel = selB.has(i);
-    const isNew = newInB.has(i);
-    const v = validateQty(dataB, i, qtyColB, qtyMapB, 'ok-b');
+  tbody.innerHTML = filtered.map(({ row, i }) => {
+    const sel    = selB.has(i);
+    const isNew  = newInB.has(i);
+    const v      = validateQty(dataB, i, qtyColB, qtyMapB, 'ok-b');
+    const stock  = qtyColB >= 0 ? parseInt(row[qtyColB]) || 0 : 0;
+    const qtyVal = qtyMapB[i] !== undefined ? qtyMapB[i] : String(stock);
 
     let tds = `<td class="chk-col" onclick="toggleRowB(${i})">
       <input type="checkbox" class="blue" ${sel?'checked':''} onchange="toggleRowB(${i})" onclick="event.stopPropagation()">
     </td>`;
-    headersB.forEach((_,j) => tds += `<td title="${escH(row[j]||'')}">${escH(row[j]||'')}</td>`);
-
+    headersB.forEach((_,j) => {
+      const cell = String(row[j] || '');
+      tds += `<td title="${escH(cell)}">${highlight(cell, searchB, 'bm')}</td>`;
+    });
     if (qtyColB >= 0) {
-      const stock  = parseInt(row[qtyColB]) || 0;
-      const qtyVal = qtyMapB[i] !== undefined ? qtyMapB[i] : String(stock);
-      const cls = sel ? v.cls : '';
+      const cls  = sel ? v.cls : '';
       const hint = sel ? v.hint : '';
       tds += `<td class="qty-col">
         <input class="qty-input blue ${cls}" type="number" min="1" max="${stock}"
@@ -557,10 +398,15 @@ function renderTableB() {
         <div class="qty-hint ${cls}">${hint}</div>
       </td>`;
     }
-
     const rowCls = isNew ? 'new-row-b' : (sel ? 'selected' : '');
     return `<tr class="${rowCls}" onclick="toggleRowB(${i})">${tds}</tr>`;
   }).join('');
+
+  if (searchB) {
+    document.getElementById('searchCountB').textContent = `${filtered.length}/${dataB.length}`;
+  } else {
+    document.getElementById('searchCountB').textContent = '';
+  }
 
   document.getElementById('badgeB').textContent = dataB.length + ' rows';
   updateFooterB();
@@ -576,25 +422,51 @@ function onQtyChangeB(i, input) {
   updateMoveBtns();
 }
 
+/* ── search handlers ── */
+function onSearchA(input) {
+  searchA = input.value;
+  document.getElementById('searchClearA').className = 'search-clear' + (searchA ? ' on' : '');
+  renderTableA();
+}
+
+function clearSearchA() {
+  searchA = '';
+  document.getElementById('searchInputA').value = '';
+  document.getElementById('searchClearA').className = 'search-clear';
+  document.getElementById('searchCountA').textContent = '';
+  renderTableA();
+}
+
+function onSearchB(input) {
+  searchB = input.value;
+  document.getElementById('searchClearB').className = 'search-clear' + (searchB ? ' on' : '');
+  renderTableB();
+}
+
+function clearSearchB() {
+  searchB = '';
+  document.getElementById('searchInputB').value = '';
+  document.getElementById('searchClearB').className = 'search-clear';
+  document.getElementById('searchCountB').textContent = '';
+  renderTableB();
+}
+
 /* ── selection A ── */
 function toggleRowA(i) {
   if (selA.has(i)) { selA.delete(i); delete qtyMapA[i]; }
-  else {
-    selA.add(i);
-    if (qtyColA >= 0 && qtyMapA[i] === undefined)
-      qtyMapA[i] = String(parseInt(dataA[i][qtyColA]) || 1);
-  }
+  else { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(dataA[i][qtyColA])||1); }
   renderTableA(); updateMoveBtns();
 }
 
 function toggleAllA(cb) {
-  if (cb.checked) dataA.forEach((row,i) => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(row[qtyColA])||1); });
-  else { selA.clear(); qtyMapA = {}; }
+  const visible = filterRows(dataA, searchA).map(r => r.i);
+  if (cb.checked) visible.forEach(i => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(dataA[i][qtyColA])||1); });
+  else { visible.forEach(i => { selA.delete(i); delete qtyMapA[i]; }); }
   renderTableA(); updateMoveBtns();
 }
 
 function selectAllA() {
-  dataA.forEach((row,i) => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(row[qtyColA])||1); });
+  filterRows(dataA, searchA).forEach(({ i }) => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(dataA[i][qtyColA])||1); });
   renderTableA(); updateMoveBtns();
 }
 
@@ -609,22 +481,19 @@ function updateFooterA() {
 /* ── selection B ── */
 function toggleRowB(i) {
   if (selB.has(i)) { selB.delete(i); delete qtyMapB[i]; }
-  else {
-    selB.add(i);
-    if (qtyColB >= 0 && qtyMapB[i] === undefined)
-      qtyMapB[i] = String(parseInt(dataB[i][qtyColB]) || 1);
-  }
+  else { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(dataB[i][qtyColB])||1); }
   renderTableB(); updateMoveBtns();
 }
 
 function toggleAllB(cb) {
-  if (cb.checked) dataB.forEach((row,i) => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(row[qtyColB])||1); });
-  else { selB.clear(); qtyMapB = {}; }
+  const visible = filterRows(dataB, searchB).map(r => r.i);
+  if (cb.checked) visible.forEach(i => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(dataB[i][qtyColB])||1); });
+  else { visible.forEach(i => { selB.delete(i); delete qtyMapB[i]; }); }
   renderTableB(); updateMoveBtns();
 }
 
 function selectAllB() {
-  dataB.forEach((row,i) => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(row[qtyColB])||1); });
+  filterRows(dataB, searchB).forEach(({ i }) => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(dataB[i][qtyColB])||1); });
   renderTableB(); updateMoveBtns();
 }
 
@@ -656,14 +525,10 @@ function updateMoveBtns() {
 }
 
 /* ── core move logic ── */
-function applyMove(srcData, srcSel, srcQtyMap, srcQtyCol, dstData, dstQtyCol) {
-  const newForDst = [];
-  const remaining = [];
-  let deleted = 0;
-
+function applyMove(srcData, srcSel, srcQtyMap, srcQtyCol, dstQtyCol) {
+  const newForDst = [], remaining = []; let deleted = 0;
   srcData.forEach((row, i) => {
     if (!srcSel.has(i)) { remaining.push(row); return; }
-
     if (srcQtyCol >= 0) {
       const stock = parseInt(row[srcQtyCol]) || 0;
       const qty   = parseInt(srcQtyMap[i])  || stock;
@@ -673,28 +538,18 @@ function applyMove(srcData, srcSel, srcQtyMap, srcQtyCol, dstData, dstQtyCol) {
       const leftover = stock - qty;
       if (leftover <= 0) { deleted++; }
       else { const aRow = [...row]; aRow[srcQtyCol] = String(leftover); remaining.push(aRow); }
-    } else {
-      newForDst.push([...row]);
-      deleted++;
-    }
+    } else { newForDst.push([...row]); deleted++; }
   });
-
   return { newForDst, remaining, deleted };
 }
 
 /* ── A → B ── */
 function moveAtoB() {
   if (!selA.size || hasErrorA()) return;
-  const { newForDst, remaining, deleted } = applyMove(dataA, selA, qtyMapA, qtyColA, dataB, qtyColB);
-
+  const { newForDst, remaining, deleted } = applyMove(dataA, selA, qtyMapA, qtyColA, qtyColB);
   const prevLen = dataB.length;
-  dataB = [...dataB, ...newForDst];
-  newInB = new Set(newForDst.map((_,k) => prevLen+k));
-  newInA = new Set();
-  dataA = remaining;
-  movedAtoB += newForDst.length;
-  selA.clear(); qtyMapA = {};
-
+  dataB = [...dataB, ...newForDst]; newInB = new Set(newForDst.map((_,k)=>prevLen+k)); newInA = new Set();
+  dataA = remaining; movedAtoB += newForDst.length; selA.clear(); qtyMapA = {};
   renderTableA(); renderTableB(); showContentB(); updateMoveBtns();
   const delMsg = deleted > 0 ? ` (A에서 ${deleted}행 삭제)` : '';
   setStatus('ok', `${newForDst.length}행을 B로 이동했습니다${delMsg}`);
@@ -705,24 +560,13 @@ function moveAtoB() {
 /* ── B → A ── */
 function moveBtoA() {
   if (!selB.size || hasErrorB()) return;
-
-  // if A not loaded yet, use B's headers
   if (!headersA.length) { headersA = [...headersB]; qtyColA = qtyColB; }
-
-  const { newForDst, remaining, deleted } = applyMove(dataB, selB, qtyMapB, qtyColB, dataA, qtyColA);
-
+  const { newForDst, remaining, deleted } = applyMove(dataB, selB, qtyMapB, qtyColB, qtyColA);
   const prevLen = dataA.length;
-  dataA = [...dataA, ...newForDst];
-  newInA = new Set(newForDst.map((_,k) => prevLen+k));
-  newInB = new Set();
-  dataB = remaining;
-  movedBtoA += newForDst.length;
-  selB.clear(); qtyMapB = {};
-
-  // ensure A panel is visible
+  dataA = [...dataA, ...newForDst]; newInA = new Set(newForDst.map((_,k)=>prevLen+k)); newInB = new Set();
+  dataB = remaining; movedBtoA += newForDst.length; selB.clear(); qtyMapB = {};
   document.getElementById('zoneA').style.display = 'none';
   document.getElementById('contentA').style.display = 'block';
-
   renderTableA(); renderTableB(); updateMoveBtns();
   const delMsg = deleted > 0 ? ` (B에서 ${deleted}행 삭제)` : '';
   setStatus('info', `${newForDst.length}행을 A로 이동했습니다${delMsg}`);
@@ -730,48 +574,54 @@ function moveBtoA() {
   document.getElementById('btnDlB').disabled = false;
 }
 
-/* ── show B panel ── */
+/* ── show B ── */
 function showContentB() {
   document.getElementById('zoneB').style.display = 'none';
   document.getElementById('emptyB').style.display = 'none';
   document.getElementById('contentB').style.display = 'block';
 }
 
-/* ── download (원본 파일명 그대로) ── */
+/* ── download ── */
 function downloadCSV(which) {
   const headers = which==='A' ? headersA : headersB;
   const data    = which==='A' ? dataA    : dataB;
   const fname   = which==='A' ? filenameA : filenameB;
   const lines   = [toCSVLine(headers), ...data.map(toCSVLine)];
   const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/csv;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download=fname; a.click();
   URL.revokeObjectURL(url);
   setStatus('ok', `${fname} 다운로드 완료`);
 }
 
-/* ── reset B ── */
-function resetB() {
-  dataB=[]; headersB=[]; selB.clear(); qtyMapB={}; qtyColB=-1; newInB=new Set();
-  document.getElementById('contentB').style.display = 'none';
-  document.getElementById('zoneB').style.display = 'flex';
-  document.getElementById('emptyB').style.display = 'none';
-  document.getElementById('fileB').value = '';
-  document.getElementById('badgeB').textContent = '0 rows';
-  document.getElementById('btnDlB').disabled = true;
-  updateMoveBtns();
-  setStatus('', '파일 B가 초기화되었습니다.');
-}
-
 /* ── reset A ── */
 function resetA() {
   dataA=[]; headersA=[]; selA.clear(); qtyMapA={}; qtyColA=-1; newInA=new Set();
-  document.getElementById('contentA').style.display = 'none';
-  document.getElementById('zoneA').style.display = 'flex';
-  document.getElementById('fileA').value = '';
-  document.getElementById('badgeA').textContent = '0 rows';
-  updateMoveBtns();
-  setStatus('', '파일 A가 초기화되었습니다.');
+  searchA=''; document.getElementById('searchInputA').value='';
+  document.getElementById('searchClearA').className='search-clear';
+  document.getElementById('searchCountA').textContent='';
+  document.getElementById('searchBarA').classList.remove('active');
+  document.getElementById('contentA').style.display='none';
+  document.getElementById('zoneA').style.display='flex';
+  document.getElementById('fileA').value='';
+  document.getElementById('badgeA').textContent='0 rows';
+  updateMoveBtns(); setStatus('', '파일 A가 초기화되었습니다.');
+}
+
+/* ── reset B ── */
+function resetB() {
+  dataB=[]; headersB=[]; selB.clear(); qtyMapB={}; qtyColB=-1; newInB=new Set();
+  searchB=''; document.getElementById('searchInputB').value='';
+  document.getElementById('searchClearB').className='search-clear';
+  document.getElementById('searchCountB').textContent='';
+  document.getElementById('searchBarB').classList.remove('active');
+  document.getElementById('contentB').style.display='none';
+  document.getElementById('zoneB').style.display='flex';
+  document.getElementById('emptyB').style.display='none';
+  document.getElementById('fileB').value='';
+  document.getElementById('badgeB').textContent='0 rows';
+  document.getElementById('btnDlB').disabled=true;
+  updateMoveBtns(); setStatus('', '파일 B가 초기화되었습니다.');
 }
 
 /* ── status ── */
@@ -788,28 +638,27 @@ function loadFile(file, which) {
     if (!rows.length) { setStatus('', '파일이 비어있습니다.'); return; }
     const headers = rows[0];
     const data = rows.slice(1).filter(r => r.some(c => c.trim()));
-
     if (which === 'A') {
-      headersA = headers; dataA = data; selA.clear(); qtyMapA = {}; newInA = new Set();
-      qtyColA = findQtyCol(headers);
-      filenameA = file.name;   // 원본 파일명
-      if (!headersB.length) headersB = [...headers];
-      document.getElementById('zoneA').style.display = 'none';
-      document.getElementById('contentA').style.display = 'block';
+      headersA=headers; dataA=data; selA.clear(); qtyMapA={}; newInA=new Set();
+      qtyColA=findQtyCol(headers); filenameA=file.name;
+      if (!headersB.length) headersB=[...headers];
+      document.getElementById('zoneA').style.display='none';
+      document.getElementById('contentA').style.display='block';
+      document.getElementById('searchBarA').classList.add('active');
       renderTableA();
-      const q = qtyColA >= 0 ? ' | 보유수 열 감지' : '';
+      const q = qtyColA>=0 ? ' | 보유수 열 감지' : '';
       setStatus('ok', `파일 A 로드 완료 — ${data.length}행, ${headers.length}열${q}`);
     } else {
-      headersB = headers; dataB = data; selB.clear(); qtyMapB = {}; newInB = new Set();
-      qtyColB = findQtyCol(headers);
-      filenameB = file.name;   // 원본 파일명
-      document.getElementById('zoneB').style.display = 'none';
-      document.getElementById('emptyB').style.display = 'none';
-      document.getElementById('contentB').style.display = 'block';
-      document.getElementById('btnDlA').disabled = false;
-      document.getElementById('btnDlB').disabled = false;
+      headersB=headers; dataB=data; selB.clear(); qtyMapB={}; newInB=new Set();
+      qtyColB=findQtyCol(headers); filenameB=file.name;
+      document.getElementById('zoneB').style.display='none';
+      document.getElementById('emptyB').style.display='none';
+      document.getElementById('contentB').style.display='block';
+      document.getElementById('searchBarB').classList.add('active');
+      document.getElementById('btnDlA').disabled=false;
+      document.getElementById('btnDlB').disabled=false;
       renderTableB(); updateMoveBtns();
-      const q = qtyColB >= 0 ? ' | 보유수 열 감지' : '';
+      const q = qtyColB>=0 ? ' | 보유수 열 감지' : '';
       setStatus('info', `파일 B 로드 완료 — ${data.length}행, ${headers.length}열${q}`);
     }
   };
@@ -818,16 +667,12 @@ function loadFile(file, which) {
 
 /* ── drag & drop ── */
 function setupZone(zoneId, inputId, which) {
-  const zone  = document.getElementById(zoneId);
-  const input = document.getElementById(inputId);
-  zone.addEventListener('click',    () => input.click());
-  input.addEventListener('change',  e => { if (e.target.files[0]) loadFile(e.target.files[0], which); });
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave',() => zone.classList.remove('dragover'));
-  zone.addEventListener('drop',     e => {
-    e.preventDefault(); zone.classList.remove('dragover');
-    const f = e.dataTransfer.files[0]; if (f) loadFile(f, which);
-  });
+  const zone=document.getElementById(zoneId), input=document.getElementById(inputId);
+  zone.addEventListener('click', ()=>input.click());
+  input.addEventListener('change', e=>{ if(e.target.files[0]) loadFile(e.target.files[0],which); });
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', ()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{ e.preventDefault(); zone.classList.remove('dragover'); const f=e.dataTransfer.files[0]; if(f) loadFile(f,which); });
 }
 
 setupZone('zoneA','fileA','A');
