@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV Row Mover</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #171717;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --border2: #333;
+    --accent: #c8f135;
+    --accent-dim: #a8cc2a;
+    --blue: #6ab3f5;
+    --blue-bg: rgba(106,179,245,0.08);
+    --text: #e8e8e8;
+    --text-muted: #777;
+    --text-dim: #aaa;
+    --sel-bg-a: #1e2a0a;
+    --sel-bg-b: #0a1a2e;
+    --danger: #ff4d4d;
+    --warn: #f5a623;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans KR', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  header h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  header p { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 108px 1fr;
+    align-items: start;
+  }
+
+  .panel { border: 1px solid var(--border); background: var(--surface); overflow: hidden; }
+  .panel-left  { border-radius: 8px 0 0 8px; }
+  .panel-right { border-radius: 0 8px 8px 0; border-left: none; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .panel-left .panel-label  { color: var(--accent); }
+  .panel-right .panel-label { color: var(--blue); }
+
+  .count-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 20px;
+    cursor: pointer;
+    border: 1.5px dashed var(--border2);
+    border-radius: 4px;
+    margin: 16px;
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 140px;
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(200,241,53,0.04);
+  }
+
+  .upload-zone input { display: none; }
+  .upload-icon { width: 32px; height: 32px; opacity: 0.4; }
+
+  .upload-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .upload-text span { color: var(--accent); border-bottom: 1px solid currentColor; }
+
+  .table-wrap { max-height: 340px; overflow-y: auto; overflow-x: auto; }
+  .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .table-wrap::-webkit-scrollbar-track { background: var(--surface); }
+  .table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  table { width: 100%; border-collapse: collapse; table-layout: auto; }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  thead th.chk-col { width: 36px; text-align: center; }
+  thead th.qty-col { width: 90px; text-align: center; color: var(--accent); }
+  thead th.qty-col-b { width: 90px; text-align: center; color: var(--blue); }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface2); cursor: pointer; }
+
+  /* A selected */
+  tbody.tbody-a tr.selected td { background: var(--sel-bg-a); }
+  tbody.tbody-a tr.selected td:first-child { border-left: 2px solid var(--accent); }
+
+  /* B selected */
+  tbody.tbody-b tr.selected td { background: var(--sel-bg-b); }
+  tbody.tbody-b tr.selected td:first-child { border-left: 2px solid var(--blue); }
+
+  td {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    padding: 7px 10px;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  td.chk-col { text-align: center; }
+  td.qty-col { text-align: center; padding: 4px 6px; vertical-align: middle; }
+
+  .qty-input {
+    width: 62px;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    color: var(--accent);
+    padding: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+    display: block;
+    margin: 0 auto 2px;
+  }
+
+  .qty-input.blue     { color: var(--blue); }
+  .qty-input:focus    { border-color: var(--accent); }
+  .qty-input.blue:focus { border-color: var(--blue); }
+  .qty-input:disabled { opacity: 0.25; cursor: not-allowed; }
+  .qty-input.warn     { border-color: var(--warn);   color: var(--warn); }
+  .qty-input.error    { border-color: var(--danger);  color: var(--danger); }
+
+  .qty-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.3;
+    min-height: 13px;
+  }
+
+  .qty-hint.warn  { color: var(--warn); }
+  .qty-hint.error { color: var(--danger); }
+  .qty-hint.ok    { color: var(--accent); }
+  .qty-hint.ok-b  { color: var(--blue); }
+
+  input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+  input[type="checkbox"].blue { accent-color: var(--blue); }
+
+  .panel-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    flex-wrap: wrap;
+  }
+
+  .footer-info { font-family: var(--mono); font-size: 11px; color: var(--text-muted); flex: 1; min-width: 80px; }
+  .footer-info strong { font-weight: 500; }
+  .footer-info strong.green { color: var(--accent); }
+  .footer-info strong.blue  { color: var(--blue); }
+
+  button {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  button:hover  { border-color: var(--text-dim); color: var(--text); background: var(--surface2); }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.3; cursor: default; transform: none; }
+
+  button.primary-a {
+    background: var(--accent); color: #0f0f0f;
+    border-color: var(--accent); font-weight: 500;
+  }
+  button.primary-a:hover    { background: var(--accent-dim); border-color: var(--accent-dim); }
+  button.primary-a:disabled { background: var(--border2); border-color: var(--border2); color: var(--text-muted); }
+
+  button.primary-b {
+    background: var(--blue); color: #0f0f0f;
+    border-color: var(--blue); font-weight: 500;
+  }
+  button.primary-b:hover    { background: #4e9de0; border-color: #4e9de0; }
+  button.primary-b:disabled { background: var(--border2); border-color: var(--border2); color: var(--text-muted); }
+
+  button.danger { color: var(--danger); border-color: rgba(255,77,77,0.3); }
+  button.danger:hover { background: rgba(255,77,77,0.08); border-color: var(--danger); }
+
+  .mid-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 4px;
+    min-height: 200px;
+  }
+
+  .mid-divider {
+    width: 1px; height: 20px;
+    background: var(--border);
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+
+  tbody tr.new-row-b td { color: #8dc8ff; }
+  tbody tr.new-row-b td:first-child { border-left: 2px solid var(--blue); }
+  tbody tr.new-row-a td { color: #d4f07a; }
+  tbody tr.new-row-a td:first-child { border-left: 2px solid var(--accent); }
+
+  .status-bar {
+    margin-top: 16px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+  }
+
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+  .status-dot.ok   { background: var(--accent); }
+  .status-dot.info { background: var(--blue); }
+  .status-dot.warn { background: var(--warn); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CSV Row Mover</h1>
+  <p>수량을 지정해서 A ↔ B 양방향 이동 &nbsp;|&nbsp; 보유수 열 자동 감지</p>
+</header>
+
+<div class="layout">
+
+  <!-- ── Panel A ── -->
+  <div class="panel panel-left">
+    <div class="panel-header">
+      <span class="panel-label">파일 A — 출처</span>
+      <span class="count-badge" id="badgeA">0 rows</span>
+    </div>
+
+    <div class="upload-zone" id="zoneA">
+      <input type="file" id="fileA" accept=".csv">
+      <svg class="upload-icon" viewBox="0 0 32 32" fill="none">
+        <path d="M16 22V10M16 10L11 15M16 10L21 15" stroke="#c8f135" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 24v2a2 2 0 002 2h16a2 2 0 002-2v-2" stroke="#777" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="upload-text"><span>클릭</span> 또는 드래그 앤 드롭<br>CSV 파일을 업로드하세요</div>
+    </div>
+
+    <div id="contentA" style="display:none">
+      <div class="table-wrap">
+        <table><thead id="theadA"></thead><tbody id="tbodyA" class="tbody-a"></tbody></table>
+      </div>
+      <div class="panel-footer">
+        <span class="footer-info" id="footerA">선택된 행 없음</span>
+        <button onclick="selectAllA()">전체 선택</button>
+        <button onclick="clearSelA()">해제</button>
+        <button class="danger" onclick="resetA()">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Middle ── -->
+  <div class="mid-col">
+    <button class="primary-a" id="btnMoveAtoB" onclick="moveAtoB()" disabled title="A → B 이동">A→B</button>
+    <div class="mid-divider"></div>
+    <button class="primary-b" id="btnMoveBtoA" onclick="moveBtoA()" disabled title="B → A 이동">B→A</button>
+  </div>
+
+  <!-- ── Panel B ── -->
+  <div class="panel panel-right">
+    <div class="panel-header">
+      <span class="panel-label" style="color:var(--blue)">파일 B — 대상</span>
+      <span class="count-badge" id="badgeB">0 rows</span>
+    </div>
+
+    <div class="upload-zone" id="zoneB">
+      <input type="file" id="fileB" accept=".csv">
+      <svg class="upload-icon" viewBox="0 0 32 32" fill="none">
+        <path d="M16 22V10M16 10L11 15M16 10L21 15" stroke="#6ab3f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 24v2a2 2 0 002 2h16a2 2 0 002-2v-1.5" stroke="#777" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="upload-text" style="color:#777">
+        <span style="color:var(--blue);border-color:var(--blue)">클릭</span> 또는 드래그 앤 드롭<br>
+        CSV 파일을 업로드하세요<br>
+        <span style="font-size:10px;opacity:0.6">(파일 B 없이도 이동 가능)</span>
+      </div>
+    </div>
+
+    <div id="contentB" style="display:none">
+      <div class="table-wrap">
+        <table><thead id="theadB"></thead><tbody id="tbodyB" class="tbody-b"></tbody></table>
+      </div>
+      <div class="panel-footer">
+        <span class="footer-info" id="footerB">선택된 행 없음</span>
+        <button onclick="selectAllB()">전체 선택</button>
+        <button onclick="clearSelB()">해제</button>
+        <button class="danger" onclick="resetB()">초기화</button>
+        <button id="btnDlA" onclick="downloadCSV('A')" disabled>A 다운로드</button>
+        <button id="btnDlB" onclick="downloadCSV('B')" disabled style="color:var(--blue);border-color:rgba(106,179,245,0.4)">B 다운로드</button>
+      </div>
+    </div>
+
+    <div id="emptyB" class="empty-state" style="display:none">
+      아직 이동된 행이 없습니다.<br>
+      파일 A에서 행을 선택하고<br>A→B 버튼을 누르세요.
+    </div>
+  </div>
+
+</div>
+
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">파일을 업로드하면 시작할 수 있습니다.</span>
+</div>
+
+<script>
+/* ── state ── */
+let dataA = [], dataB = [], headersA = [], headersB = [];
+let selA = new Set(), selB = new Set();
+let qtyMapA = {}, qtyMapB = {};
+let newInA = new Set(), newInB = new Set();
+let qtyColA = -1, qtyColB = -1;
+let filenameA = 'file_a.csv', filenameB = 'file_b.csv';
+let movedAtoB = 0, movedBtoA = 0;
+
+/* ── CSV ── */
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const result = [];
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c==='"') { if (inQ && line[i+1]==='"'){cur+='"';i++;} else inQ=!inQ; }
+      else if (c===',' && !inQ) { cols.push(cur); cur=''; }
+      else cur += c;
+    }
+    cols.push(cur);
+    result.push(cols);
+  }
+  return result;
+}
+
+function toCSVLine(row) {
+  return row.map(c => {
+    const s = String(c==null?'':c);
+    return (s.includes(',')||s.includes('"')||s.includes('\n')) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',');
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function findQtyCol(headers) {
+  return headers.findIndex(h => h.trim() === '보유수');
+}
+
+/* ── qty validation (generic) ── */
+function validateQty(data, idx, qtyColIdx, qtyMap, colorOk) {
+  if (qtyColIdx < 0) return { cls: '', hint: '', ok: true };
+  const stock = parseInt(data[idx][qtyColIdx]) || 0;
+  const qty   = parseInt(qtyMap[idx]) || 0;
+  if (qty <= 0)      return { cls: 'error', hint: '1 이상 입력',    ok: false };
+  if (qty > stock)   return { cls: 'error', hint: `최대 ${stock}`,  ok: false };
+  if (qty === stock) return { cls: colorOk, hint: '→ 삭제됨',       ok: true  };
+  return               { cls: 'warn',  hint: `잔여: ${stock-qty}`, ok: true  };
+}
+
+/* ── render Table A ── */
+function renderTableA() {
+  const thead = document.getElementById('theadA');
+  const tbody = document.getElementById('tbodyA');
+
+  let th = '<tr><th class="chk-col"><input type="checkbox" id="chkAllA" onchange="toggleAllA(this)"></th>';
+  headersA.forEach(h => th += `<th>${escH(h)}</th>`);
+  if (qtyColA >= 0) th += '<th class="qty-col">이동 수량</th>';
+  th += '</tr>';
+  thead.innerHTML = th;
+
+  tbody.innerHTML = dataA.map((row, i) => {
+    const sel = selA.has(i);
+    const isNew = newInA.has(i);
+    const v = validateQty(dataA, i, qtyColA, qtyMapA, 'ok');
+
+    let tds = `<td class="chk-col" onclick="toggleRowA(${i})">
+      <input type="checkbox" ${sel?'checked':''} onchange="toggleRowA(${i})" onclick="event.stopPropagation()">
+    </td>`;
+    headersA.forEach((_,j) => tds += `<td title="${escH(row[j]||'')}">${escH(row[j]||'')}</td>`);
+
+    if (qtyColA >= 0) {
+      const stock  = parseInt(row[qtyColA]) || 0;
+      const qtyVal = qtyMapA[i] !== undefined ? qtyMapA[i] : String(stock);
+      const cls = sel ? v.cls : '';
+      const hint = sel ? v.hint : '';
+      tds += `<td class="qty-col">
+        <input class="qty-input ${cls}" type="number" min="1" max="${stock}"
+          value="${escH(qtyVal)}" ${!sel?'disabled':''}
+          oninput="onQtyChangeA(${i},this)" onclick="event.stopPropagation()">
+        <div class="qty-hint ${cls}">${hint}</div>
+      </td>`;
+    }
+
+    const rowCls = isNew ? 'new-row-a' : (sel ? 'selected' : '');
+    return `<tr class="${rowCls}" onclick="toggleRowA(${i})">${tds}</tr>`;
+  }).join('');
+
+  document.getElementById('badgeA').textContent = dataA.length + ' rows';
+  updateFooterA();
+}
+
+function onQtyChangeA(i, input) {
+  qtyMapA[i] = input.value;
+  const v = validateQty(dataA, i, qtyColA, qtyMapA, 'ok');
+  input.className = 'qty-input ' + v.cls;
+  const hint = input.parentElement.querySelector('.qty-hint');
+  hint.className = 'qty-hint ' + v.cls;
+  hint.textContent = v.hint;
+  updateMoveBtns();
+}
+
+/* ── render Table B ── */
+function renderTableB() {
+  const thead = document.getElementById('theadB');
+  const tbody = document.getElementById('tbodyB');
+
+  let th = '<tr><th class="chk-col"><input type="checkbox" id="chkAllB" onchange="toggleAllB(this)"></th>';
+  headersB.forEach(h => th += `<th>${escH(h)}</th>`);
+  if (qtyColB >= 0) th += '<th class="qty-col-b">이동 수량</th>';
+  th += '</tr>';
+  thead.innerHTML = th;
+
+  tbody.innerHTML = dataB.map((row, i) => {
+    const sel = selB.has(i);
+    const isNew = newInB.has(i);
+    const v = validateQty(dataB, i, qtyColB, qtyMapB, 'ok-b');
+
+    let tds = `<td class="chk-col" onclick="toggleRowB(${i})">
+      <input type="checkbox" class="blue" ${sel?'checked':''} onchange="toggleRowB(${i})" onclick="event.stopPropagation()">
+    </td>`;
+    headersB.forEach((_,j) => tds += `<td title="${escH(row[j]||'')}">${escH(row[j]||'')}</td>`);
+
+    if (qtyColB >= 0) {
+      const stock  = parseInt(row[qtyColB]) || 0;
+      const qtyVal = qtyMapB[i] !== undefined ? qtyMapB[i] : String(stock);
+      const cls = sel ? v.cls : '';
+      const hint = sel ? v.hint : '';
+      tds += `<td class="qty-col">
+        <input class="qty-input blue ${cls}" type="number" min="1" max="${stock}"
+          value="${escH(qtyVal)}" ${!sel?'disabled':''}
+          oninput="onQtyChangeB(${i},this)" onclick="event.stopPropagation()">
+        <div class="qty-hint ${cls}">${hint}</div>
+      </td>`;
+    }
+
+    const rowCls = isNew ? 'new-row-b' : (sel ? 'selected' : '');
+    return `<tr class="${rowCls}" onclick="toggleRowB(${i})">${tds}</tr>`;
+  }).join('');
+
+  document.getElementById('badgeB').textContent = dataB.length + ' rows';
+  updateFooterB();
+}
+
+function onQtyChangeB(i, input) {
+  qtyMapB[i] = input.value;
+  const v = validateQty(dataB, i, qtyColB, qtyMapB, 'ok-b');
+  input.className = 'qty-input blue ' + v.cls;
+  const hint = input.parentElement.querySelector('.qty-hint');
+  hint.className = 'qty-hint ' + v.cls;
+  hint.textContent = v.hint;
+  updateMoveBtns();
+}
+
+/* ── selection A ── */
+function toggleRowA(i) {
+  if (selA.has(i)) { selA.delete(i); delete qtyMapA[i]; }
+  else {
+    selA.add(i);
+    if (qtyColA >= 0 && qtyMapA[i] === undefined)
+      qtyMapA[i] = String(parseInt(dataA[i][qtyColA]) || 1);
+  }
+  renderTableA(); updateMoveBtns();
+}
+
+function toggleAllA(cb) {
+  if (cb.checked) dataA.forEach((row,i) => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(row[qtyColA])||1); });
+  else { selA.clear(); qtyMapA = {}; }
+  renderTableA(); updateMoveBtns();
+}
+
+function selectAllA() {
+  dataA.forEach((row,i) => { selA.add(i); if (qtyColA>=0 && qtyMapA[i]===undefined) qtyMapA[i]=String(parseInt(row[qtyColA])||1); });
+  renderTableA(); updateMoveBtns();
+}
+
+function clearSelA() { selA.clear(); qtyMapA = {}; renderTableA(); updateMoveBtns(); }
+
+function updateFooterA() {
+  const n = selA.size;
+  document.getElementById('footerA').innerHTML =
+    n > 0 ? `<strong class="green">${n}행</strong> 선택됨` : '선택된 행 없음';
+}
+
+/* ── selection B ── */
+function toggleRowB(i) {
+  if (selB.has(i)) { selB.delete(i); delete qtyMapB[i]; }
+  else {
+    selB.add(i);
+    if (qtyColB >= 0 && qtyMapB[i] === undefined)
+      qtyMapB[i] = String(parseInt(dataB[i][qtyColB]) || 1);
+  }
+  renderTableB(); updateMoveBtns();
+}
+
+function toggleAllB(cb) {
+  if (cb.checked) dataB.forEach((row,i) => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(row[qtyColB])||1); });
+  else { selB.clear(); qtyMapB = {}; }
+  renderTableB(); updateMoveBtns();
+}
+
+function selectAllB() {
+  dataB.forEach((row,i) => { selB.add(i); if (qtyColB>=0 && qtyMapB[i]===undefined) qtyMapB[i]=String(parseInt(row[qtyColB])||1); });
+  renderTableB(); updateMoveBtns();
+}
+
+function clearSelB() { selB.clear(); qtyMapB = {}; renderTableB(); updateMoveBtns(); }
+
+function updateFooterB() {
+  const n = selB.size;
+  document.getElementById('footerB').innerHTML =
+    n > 0 ? `<strong class="blue">${n}행</strong> 선택됨` : '선택된 행 없음';
+}
+
+/* ── error checks ── */
+function hasErrorA() {
+  if (qtyColA < 0) return false;
+  for (const i of selA) if (!validateQty(dataA,i,qtyColA,qtyMapA,'ok').ok) return true;
+  return false;
+}
+
+function hasErrorB() {
+  if (qtyColB < 0) return false;
+  for (const i of selB) if (!validateQty(dataB,i,qtyColB,qtyMapB,'ok-b').ok) return true;
+  return false;
+}
+
+function updateMoveBtns() {
+  document.getElementById('btnMoveAtoB').disabled = (selA.size === 0 || hasErrorA());
+  document.getElementById('btnMoveBtoA').disabled = (selB.size === 0 || hasErrorB());
+  updateFooterA(); updateFooterB();
+}
+
+/* ── core move logic ── */
+function applyMove(srcData, srcSel, srcQtyMap, srcQtyCol, dstData, dstQtyCol) {
+  const newForDst = [];
+  const remaining = [];
+  let deleted = 0;
+
+  srcData.forEach((row, i) => {
+    if (!srcSel.has(i)) { remaining.push(row); return; }
+
+    if (srcQtyCol >= 0) {
+      const stock = parseInt(row[srcQtyCol]) || 0;
+      const qty   = parseInt(srcQtyMap[i])  || stock;
+      const dRow  = [...row];
+      if (dstQtyCol >= 0) dRow[dstQtyCol] = String(qty);
+      newForDst.push(dRow);
+      const leftover = stock - qty;
+      if (leftover <= 0) { deleted++; }
+      else { const aRow = [...row]; aRow[srcQtyCol] = String(leftover); remaining.push(aRow); }
+    } else {
+      newForDst.push([...row]);
+      deleted++;
+    }
+  });
+
+  return { newForDst, remaining, deleted };
+}
+
+/* ── A → B ── */
+function moveAtoB() {
+  if (!selA.size || hasErrorA()) return;
+  const { newForDst, remaining, deleted } = applyMove(dataA, selA, qtyMapA, qtyColA, dataB, qtyColB);
+
+  const prevLen = dataB.length;
+  dataB = [...dataB, ...newForDst];
+  newInB = new Set(newForDst.map((_,k) => prevLen+k));
+  newInA = new Set();
+  dataA = remaining;
+  movedAtoB += newForDst.length;
+  selA.clear(); qtyMapA = {};
+
+  renderTableA(); renderTableB(); showContentB(); updateMoveBtns();
+  const delMsg = deleted > 0 ? ` (A에서 ${deleted}행 삭제)` : '';
+  setStatus('ok', `${newForDst.length}행을 B로 이동했습니다${delMsg}`);
+  document.getElementById('btnDlA').disabled = false;
+  document.getElementById('btnDlB').disabled = false;
+}
+
+/* ── B → A ── */
+function moveBtoA() {
+  if (!selB.size || hasErrorB()) return;
+
+  // if A not loaded yet, use B's headers
+  if (!headersA.length) { headersA = [...headersB]; qtyColA = qtyColB; }
+
+  const { newForDst, remaining, deleted } = applyMove(dataB, selB, qtyMapB, qtyColB, dataA, qtyColA);
+
+  const prevLen = dataA.length;
+  dataA = [...dataA, ...newForDst];
+  newInA = new Set(newForDst.map((_,k) => prevLen+k));
+  newInB = new Set();
+  dataB = remaining;
+  movedBtoA += newForDst.length;
+  selB.clear(); qtyMapB = {};
+
+  // ensure A panel is visible
+  document.getElementById('zoneA').style.display = 'none';
+  document.getElementById('contentA').style.display = 'block';
+
+  renderTableA(); renderTableB(); updateMoveBtns();
+  const delMsg = deleted > 0 ? ` (B에서 ${deleted}행 삭제)` : '';
+  setStatus('info', `${newForDst.length}행을 A로 이동했습니다${delMsg}`);
+  document.getElementById('btnDlA').disabled = false;
+  document.getElementById('btnDlB').disabled = false;
+}
+
+/* ── show B panel ── */
+function showContentB() {
+  document.getElementById('zoneB').style.display = 'none';
+  document.getElementById('emptyB').style.display = 'none';
+  document.getElementById('contentB').style.display = 'block';
+}
+
+/* ── download (원본 파일명 그대로) ── */
+function downloadCSV(which) {
+  const headers = which==='A' ? headersA : headersB;
+  const data    = which==='A' ? dataA    : dataB;
+  const fname   = which==='A' ? filenameA : filenameB;
+  const lines   = [toCSVLine(headers), ...data.map(toCSVLine)];
+  const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=fname; a.click();
+  URL.revokeObjectURL(url);
+  setStatus('ok', `${fname} 다운로드 완료`);
+}
+
+/* ── reset B ── */
+function resetB() {
+  dataB=[]; headersB=[]; selB.clear(); qtyMapB={}; qtyColB=-1; newInB=new Set();
+  document.getElementById('contentB').style.display = 'none';
+  document.getElementById('zoneB').style.display = 'flex';
+  document.getElementById('emptyB').style.display = 'none';
+  document.getElementById('fileB').value = '';
+  document.getElementById('badgeB').textContent = '0 rows';
+  document.getElementById('btnDlB').disabled = true;
+  updateMoveBtns();
+  setStatus('', '파일 B가 초기화되었습니다.');
+}
+
+/* ── reset A ── */
+function resetA() {
+  dataA=[]; headersA=[]; selA.clear(); qtyMapA={}; qtyColA=-1; newInA=new Set();
+  document.getElementById('contentA').style.display = 'none';
+  document.getElementById('zoneA').style.display = 'flex';
+  document.getElementById('fileA').value = '';
+  document.getElementById('badgeA').textContent = '0 rows';
+  updateMoveBtns();
+  setStatus('', '파일 A가 초기화되었습니다.');
+}
+
+/* ── status ── */
+function setStatus(type, msg) {
+  document.getElementById('statusDot').className = 'status-dot'+(type?' '+type:'');
+  document.getElementById('statusText').textContent = msg;
+}
+
+/* ── load file ── */
+function loadFile(file, which) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = parseCSV(e.target.result);
+    if (!rows.length) { setStatus('', '파일이 비어있습니다.'); return; }
+    const headers = rows[0];
+    const data = rows.slice(1).filter(r => r.some(c => c.trim()));
+
+    if (which === 'A') {
+      headersA = headers; dataA = data; selA.clear(); qtyMapA = {}; newInA = new Set();
+      qtyColA = findQtyCol(headers);
+      filenameA = file.name;   // 원본 파일명
+      if (!headersB.length) headersB = [...headers];
+      document.getElementById('zoneA').style.display = 'none';
+      document.getElementById('contentA').style.display = 'block';
+      renderTableA();
+      const q = qtyColA >= 0 ? ' | 보유수 열 감지' : '';
+      setStatus('ok', `파일 A 로드 완료 — ${data.length}행, ${headers.length}열${q}`);
+    } else {
+      headersB = headers; dataB = data; selB.clear(); qtyMapB = {}; newInB = new Set();
+      qtyColB = findQtyCol(headers);
+      filenameB = file.name;   // 원본 파일명
+      document.getElementById('zoneB').style.display = 'none';
+      document.getElementById('emptyB').style.display = 'none';
+      document.getElementById('contentB').style.display = 'block';
+      document.getElementById('btnDlA').disabled = false;
+      document.getElementById('btnDlB').disabled = false;
+      renderTableB(); updateMoveBtns();
+      const q = qtyColB >= 0 ? ' | 보유수 열 감지' : '';
+      setStatus('info', `파일 B 로드 완료 — ${data.length}행, ${headers.length}열${q}`);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+/* ── drag & drop ── */
+function setupZone(zoneId, inputId, which) {
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  zone.addEventListener('click',    () => input.click());
+  input.addEventListener('change',  e => { if (e.target.files[0]) loadFile(e.target.files[0], which); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave',() => zone.classList.remove('dragover'));
+  zone.addEventListener('drop',     e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0]; if (f) loadFile(f, which);
+  });
+}
+
+setupZone('zoneA','fileA','A');
+setupZone('zoneB','fileB','B');
+</script>
+</body>
+</html>
