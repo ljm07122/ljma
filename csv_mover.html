@@ -182,7 +182,7 @@
       </div>
       <div class="merge-body" id="mergeBody">
         기준 열:<br>
-        <span class="key">text/ja/name</span><br><br>
+        <span class="key">첫 번째 열 (자동)</span><br><br>
         <span class="desc">OFF: 항상 새 행 추가<br>ON: 같은 이름이 있으면 보유수 합산</span>
       </div>
     </div>
@@ -243,12 +243,12 @@ let selA = new Set(), selB = new Set();
 let qtyMapA = {}, qtyMapB = {};
 let newInA = new Set(), newInB = new Set(), mergedIn = new Set();
 let qtyColA = -1, qtyColB = -1;
-let nameColA = -1, nameColB = -1;   // index of text/ja/name
+let nameColA = 0, nameColB = 0;     // 항상 첫 번째 열을 이름 기준으로 사용
 let filenameA = 'file_a.csv', filenameB = 'file_b.csv';
 let mergeMode = false;
 let searchA = '', searchB = '';
 
-const NAME_COL = 'text/ja/name';
+/* 이름 기준 열: 항상 첫 번째 열(인덱스 0) */
 
 /* ── CSV ── */
 function parseCSV(text) {
@@ -281,7 +281,6 @@ function escH(s) {
 }
 
 function findQtyCol(headers)  { return headers.findIndex(h => h.trim() === '보유수'); }
-function findNameCol(headers) { return headers.findIndex(h => h.trim() === NAME_COL); }
 
 /* ── merge toggle ── */
 function toggleMerge() {
@@ -571,7 +570,7 @@ function downloadCSV(which) {
 }
 
 function resetA() {
-  dataA=[]; headersA=[]; selA.clear(); qtyMapA={}; qtyColA=-1; nameColA=-1; newInA=new Set();
+  dataA=[]; headersA=[]; selA.clear(); qtyMapA={}; qtyColA=-1; nameColA=0; newInA=new Set();
   searchA=''; document.getElementById('searchInputA').value='';
   document.getElementById('searchClearA').className='search-clear';
   document.getElementById('searchCountA').textContent='';
@@ -584,7 +583,7 @@ function resetA() {
 }
 
 function resetB() {
-  dataB=[]; headersB=[]; selB.clear(); qtyMapB={}; qtyColB=-1; nameColB=-1; newInB=new Set(); mergedIn=new Set();
+  dataB=[]; headersB=[]; selB.clear(); qtyMapB={}; qtyColB=-1; nameColB=0; newInB=new Set(); mergedIn=new Set();
   searchB=''; document.getElementById('searchInputB').value='';
   document.getElementById('searchClearB').className='search-clear';
   document.getElementById('searchCountB').textContent='';
@@ -613,17 +612,17 @@ function loadFile(file, which) {
     const data = rows.slice(1).filter(r=>r.some(c=>c.trim()));
     if (which==='A') {
       headersA=headers; dataA=data; selA.clear(); qtyMapA={}; newInA=new Set();
-      qtyColA=findQtyCol(headers); nameColA=findNameCol(headers); filenameA=file.name;
+      qtyColA=findQtyCol(headers); nameColA=0; filenameA=file.name;
       if (!headersB.length) headersB=[...headers];
       document.getElementById('zoneA').style.display='none';
       document.getElementById('contentA').style.display='block';
       document.getElementById('searchBarA').classList.add('active');
       renderTableA();
-      const q=[]; if(qtyColA>=0)q.push('보유수 열 감지'); if(nameColA>=0)q.push('name 열 감지');
+      const q=[]; if(qtyColA>=0)q.push('보유수 열 감지'); q.push(`병합 기준: [${headers[0]}]`);
       setStatus('ok',`파일 A 로드 완료 — ${data.length}행, ${headers.length}열`+(q.length?' | '+q.join(', '):''));
     } else {
       headersB=headers; dataB=data; selB.clear(); qtyMapB={}; newInB=new Set(); mergedIn=new Set();
-      qtyColB=findQtyCol(headers); nameColB=findNameCol(headers); filenameB=file.name;
+      qtyColB=findQtyCol(headers); nameColB=0; filenameB=file.name;
       document.getElementById('zoneB').style.display='none';
       document.getElementById('emptyB').style.display='none';
       document.getElementById('contentB').style.display='block';
@@ -631,7 +630,7 @@ function loadFile(file, which) {
       document.getElementById('btnDlA').disabled=false;
       document.getElementById('btnDlB').disabled=false;
       renderTableB(); updateMoveBtns();
-      const q=[]; if(qtyColB>=0)q.push('보유수 열 감지'); if(nameColB>=0)q.push('name 열 감지');
+      const q=[]; if(qtyColB>=0)q.push('보유수 열 감지'); q.push(`병합 기준: [${headers[0]}]`);
       setStatus('info',`파일 B 로드 완료 — ${data.length}행, ${headers.length}열`+(q.length?' | '+q.join(', '):''));
     }
   };
