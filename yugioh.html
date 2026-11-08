@@ -14,7 +14,7 @@ th, td { border: 1px solid #ccc; padding: 4px; }
 <input type="file" id="fileInput" accept=".csv">
 <br><br>
 
-검색: <input type="text" id="searchInput">
+検索: <input type="text" id="searchInput">
 <button onclick="applySearch()">検索</button>
 
 <br><br>
@@ -186,13 +186,13 @@ function downloadSelected() {
         .map(row => {
             const cleanRow = { ...row };
             delete cleanRow._selected;
-            cleanRow["보유수"] = cleanRow._number;
+            cleanRow["保有数"] = cleanRow._number;
             delete cleanRow._number;
             return cleanRow;
         });
 
     if (selectedRows.length === 0) {
-        alert("선택된 데이터가 없습니다.");
+        alert("選択したデータがございません。");
         return;
     }
 
